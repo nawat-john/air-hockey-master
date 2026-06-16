@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+runs/
+*.zip
+*.gif
+.pytest_cache/

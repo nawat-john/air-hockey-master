@@ -1,0 +1,14 @@
+# Install into the D: venv:
+#   D:\Code\.venv\Scripts\python.exe -m pip install -r requirements.txt
+# NOTE: torch must be the CUDA build for GPU training. If pip pulls the CPU
+# build, reinstall it explicitly:
+#   pip install torch==2.6.0+cu124 torchvision==0.21.0+cu124 \
+#       --index-url https://download.pytorch.org/whl/cu124
+gymnasium>=1.0
+stable-baselines3>=2.4.0
+numpy
+pygame>=2.5
+tensorboard
+imageio
+pytest
+# torch  -> installed separately as the +cu124 build (see note above)
