@@ -1,0 +1,103 @@
+:root {
+  --bg: #0b0e16;
+  --panel: #141a28;
+  --line: #5a82b4;
+  --you: #46c8ff;
+  --bot: #ff5a5a;
+  --gold: #ebc83c;
+  --text: #dfe3ea;
+  --muted: #8a93a6;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#app {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 18px 16px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 4px 0 12px;
+  text-align: center;
+}
+.sub { color: var(--muted); font-size: 0.9rem; font-weight: 400; }
+
+#scoreboard {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.score { display: flex; align-items: center; gap: 10px; }
+.score.you { color: var(--you); }
+.score.bot { color: var(--bot); }
+.score .label { font-size: 0.75rem; letter-spacing: 0.15em; color: var(--muted); }
+.vs { color: var(--muted); }
+
+canvas {
+  width: 100%;
+  max-width: 840px;
+  aspect-ratio: 2 / 1;
+  background: #16243a;
+  border-radius: 10px;
+  border: 1px solid #24344e;
+  touch-action: none;
+  cursor: none;
+}
+
+#controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  margin-top: 14px;
+}
+#controls label { color: var(--muted); font-size: 0.9rem; display: flex; gap: 6px; align-items: center; }
+#controls select {
+  background: var(--panel); color: var(--text);
+  border: 1px solid #2a3650; border-radius: 6px; padding: 4px 8px;
+}
+.checkbox { cursor: pointer; }
+button {
+  background: var(--panel); color: var(--text);
+  border: 1px solid #2a3650; border-radius: 6px;
+  padding: 6px 14px; cursor: pointer; font-size: 0.9rem;
+}
+button:hover { border-color: var(--line); }
+
+.hint { color: var(--muted); font-size: 0.85rem; margin: 14px 0 4px; text-align: center; }
+footer { color: var(--muted); font-size: 0.78rem; text-align: center; max-width: 540px; }
+footer a, .hint a { color: var(--you); }
+
+#overlay {
+  position: fixed; inset: 0;
+  background: rgba(6, 9, 16, 0.82);
+  display: flex; align-items: center; justify-content: center;
+}
+#overlay.hidden { display: none; }
+.overlay-card {
+  background: var(--panel);
+  border: 1px solid #2a3650; border-radius: 12px;
+  padding: 32px 40px; text-align: center;
+}
+.overlay-card h2 { margin: 0 0 18px; font-size: 1.8rem; }
+.overlay-card button { padding: 10px 22px; font-size: 1rem; }

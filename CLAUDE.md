@@ -80,3 +80,8 @@ pickle cleanly across processes.
 - New reward terms go in `AirHockeyEnv._reward`; gate shaping behind `self.shaping`
   and add sparse terms first, then shaping, watching for reward hacking (plan §10).
 - `runs/`, `*.zip`, `*.gif` are gitignored — they're training artifacts.
+- `docs/` is a static browser game (vanilla JS) deployed via GitHub Pages. Its
+  `game.js` is a 1:1 port of `physics.py` + `predictor.py` + the scripted bot —
+  **if you change the Python physics/predictor/bot, update `docs/game.js` to
+  match**, or the web game will diverge from the sim. There is no build step and
+  no CI; test the page with `python -m http.server -d docs`.

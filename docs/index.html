@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Air Hockey — You vs the Bot</title>
+  <meta name="description" content="Play air hockey against an analytic trajectory-predicting bot. Runs entirely in your browser." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>Air Hockey <span class="sub">you (blue) vs bot (red)</span></h1>
+    </header>
+
+    <div id="scoreboard">
+      <div class="score you"><span class="label">YOU</span><span id="scoreYou">0</span></div>
+      <div class="vs">:</div>
+      <div class="score bot"><span id="scoreBot">0</span><span class="label">BOT</span></div>
+    </div>
+
+    <canvas id="game"></canvas>
+
+    <div id="controls">
+      <label>
+        Difficulty
+        <select id="difficulty">
+          <option value="easy">Easy</option>
+          <option value="normal" selected>Normal</option>
+          <option value="hard">Hard</option>
+        </select>
+      </label>
+      <label class="checkbox">
+        <input type="checkbox" id="showPred" checked /> Show prediction
+      </label>
+      <button id="reset">Reset match</button>
+    </div>
+
+    <p class="hint">Move your mouse (or finger) on your half of the table. First to 7 wins.</p>
+    <footer>
+      Physics &amp; bot ported from the Python project — the bot predicts the puck's
+      path (with wall bounces) and intercepts. <a href="https://github.com/">Source</a>
+    </footer>
+  </div>
+
+  <div id="overlay" class="hidden">
+    <div class="overlay-card">
+      <h2 id="overlayTitle">You win!</h2>
+      <button id="playAgain">Play again</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>

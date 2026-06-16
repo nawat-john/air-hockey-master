@@ -1,7 +1,7 @@
 # Air Hockey Bot (10 Hz, hybrid physics + RL)
 
-<!-- Replace OWNER/REPO with your GitHub path once pushed. -->
-[![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/ci.yml)
+**▶ Play in your browser:** `https://OWNER.github.io/REPO/` (after enabling
+GitHub Pages — see below). No install, plays against the bot on your half.
 
 A 2D air-hockey simulator and a strong bot that **predicts the puck's
 trajectory** (including wall bounces) and learns strategy with reinforcement
@@ -78,12 +78,33 @@ D:\Code\.venv\Scripts\python.exe -m tensorboard.main --logdir runs\tb
   shaping (possession, shooting toward +x, defensive positioning, anti-stall).
   Disable shaping with the env's `shaping=False` if you suspect reward hacking.
 
-## GitHub: CI and shipping the model
+## Browser game (GitHub Pages)
 
-- **CI** (`.github/workflows/ci.yml`) runs on every push/PR: the physics &
-  predictor tests plus a short smoke run of the train→eval pipeline, all headless
-  on CPU (GitHub runners have no GPU). Replace `OWNER/REPO` in the badge above
-  after the first push.
+`docs/` is a self-contained static web game (HTML + CSS + vanilla JS) — the
+physics, trajectory predictor, and scripted bot are ported to JavaScript so it
+runs entirely client-side with **no backend**. (GitHub Pages can't run PyTorch;
+the scripted predictor bot is used as the opponent — it currently outplays the
+trained RL model anyway.)
+
+To publish it:
+
+1. Push the repo to GitHub.
+2. Settings → Pages → Build and deployment → **Deploy from a branch**.
+3. Branch = `main`, folder = **`/docs`** → Save.
+4. After ~1 min the game is live at `https://OWNER.github.io/REPO/`.
+
+Test locally first:
+
+```powershell
+D:\Code\.venv\Scripts\python.exe -m http.server -d docs 8000   # then open http://localhost:8000
+```
+
+Difficulty (easy/normal/hard) scales the bot's speed, aggression, and reaction
+delay. The JS physics mirrors `airhockey/physics.py` 1:1, so behaviour matches
+the Python sim.
+
+## Shipping the trained model
+
 - **Model files are gitignored** (`runs/`, `*.zip`, `*.gif`) — keep weights out
   of git. Trained models are tiny (~3 MB each), so ship them as **Release
   assets** instead. After training locally:
@@ -93,8 +114,6 @@ D:\Code\.venv\Scripts\python.exe -m tensorboard.main --logdir runs\tb
   gh release upload v0.1 runs\sac_final.zip
   ```
   Download later with `gh release download v0.1`.
-- **Training on GitHub Actions is not recommended** — runners are CPU-only and
-  capped at 6 h/job. Train on your GPU box; use Actions only for tests/CI.
 
 ## Current status
 
