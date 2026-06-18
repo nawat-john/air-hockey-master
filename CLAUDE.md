@@ -9,6 +9,29 @@ at **10 Hz**. The full design rationale lives in `air_hockey_bot_plan.md` (Thai)
 — read it before making architectural changes; the code deliberately mirrors its
 sections (referenced as "plan §N" in docstrings).
 
+## Project direction (read before proposing how the bot should play)
+
+- **RL is the goal, not rule-based.** The bot's strategy/response to the player
+  must come from a **learned RL policy**, not hand-written if/else. The scripted
+  `TrajectoryPredictor`/`ScriptedPredictor` stays only as a *baseline*, a *feature
+  source* for the observation, and a self-play sparring partner — **not** as the
+  shipped opponent. Do **not** propose upgrading the scripted bot (e.g. a "perfect
+  analytic goalie") as the way to make the bot stronger; improve the RL policy
+  instead (training, reward shaping, self-play).
+- **The web game's scripted levels (`easy/normal/hard`) run the scripted JS bot;
+  the `rl` level runs the ported trained policy.** `docs/game.js`
+  `DIFFICULTY = {easy, normal, hard}` all call the same `scriptedBot()` (differing
+  only in `{speed, aggression, react}`); the `rl` entry calls `rlBot()`, which runs
+  the trained SAC actor **client-side** — GitHub Pages can't run PyTorch, so the
+  policy is shipped as weights, not as a runtime. The pipeline:
+  `scripts/export_policy.py` dumps the actor (16→[256,256]→2, tanh) to
+  `docs/policy.js` (`window.RL_POLICY`), and `rlBot()` hand-codes the MLP forward
+  pass plus the mirror/observation logic (must stay in sync with
+  `airhockey.env.build_observation` + `airhockey.opponents.{mirror_state,PolicyOpponent}`).
+  **Re-run `export_policy.py` after retraining** to refresh the web policy; RL
+  training otherwise does **not** change any web bot. The `rl` level is verified
+  to match `model.predict` to ~1e-4 over random states.
+
 ## Environment / commands
 
 This project uses the self-contained Python on `D:` — **always invoke it by full

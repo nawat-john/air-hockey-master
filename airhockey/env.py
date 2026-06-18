@@ -202,6 +202,11 @@ class AirHockeyEnv(gym.Env):
         if s.last_touch == 0 and prev_touch != 0:
             r += 0.1
             r += 0.3 * max(0.0, float(s.puck_vel[0])) / cfg.puck_max_speed
+            # Dense counterpart to the sparse own-goal penalty: punish striking
+            # the puck back toward our own goal (−x). The 30.5% UTD4 policy spiked
+            # to 52 own goals/200 eps from reckless strikes; the sparse −15 alone
+            # was too weak a signal. Penalty > the +x bonus so forward always wins.
+            r -= 0.4 * max(0.0, -float(s.puck_vel[0])) / cfg.puck_max_speed
 
         # Defensive positioning: when the puck is incoming on our side, reward
         # being between the puck and our goal (in y).

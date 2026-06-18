@@ -82,9 +82,15 @@ D:\Code\.venv\Scripts\python.exe -m tensorboard.main --logdir runs\tb
 
 `docs/` is a self-contained static web game (HTML + CSS + vanilla JS) — the
 physics, trajectory predictor, and scripted bot are ported to JavaScript so it
-runs entirely client-side with **no backend**. (GitHub Pages can't run PyTorch;
-the scripted predictor bot is used as the opponent — it currently outplays the
-trained RL model anyway.)
+runs entirely client-side with **no backend**. GitHub Pages can't run PyTorch, so
+the trained **RL policy is shipped as weights, not a runtime**: `export_policy.py`
+dumps the SAC actor (16→[256,256]→2) to `docs/policy.js`, and the **`RL (trained)`**
+difficulty runs that net via a hand-coded MLP forward pass in `game.js`. Re-run
+the export after retraining to update the web policy:
+
+```powershell
+D:\Code\.venv\Scripts\python.exe scripts\export_policy.py --model runs\sac_final.zip
+```
 
 To publish it:
 
@@ -99,9 +105,10 @@ Test locally first:
 D:\Code\.venv\Scripts\python.exe -m http.server -d docs 8000   # then open http://localhost:8000
 ```
 
-Difficulty (easy/normal/hard) scales the bot's speed, aggression, and reaction
-delay. The JS physics mirrors `airhockey/physics.py` 1:1, so behaviour matches
-the Python sim.
+Difficulty `easy/normal/hard` scales the scripted bot's speed, aggression, and
+reaction delay; `RL (trained)` instead runs the trained policy client-side. The
+JS physics mirrors `airhockey/physics.py` 1:1, so behaviour matches the Python
+sim, and the ported actor matches `model.predict` to ~1e-4.
 
 ## Shipping the trained model
 
@@ -117,8 +124,13 @@ the Python sim.
 
 ## Current status
 
-First full curriculum run reaches ~67% vs a still bot and ~73% vs random, but
-only ~19.5% vs the scripted predictor — the agent is *undertrained* (it improved
-every phase and hadn't plateaued). The likely fix is a higher update-to-data
-ratio: continue training with `--gradient-steps 4` (or `-1`). See
-`scripts/train_sac.py --help`.
+The agent now **beats the scripted predictor 59%** (118W/79L/3D over 200 eps),
+up from 19.5% on the first run. Two things got it there: a higher update-to-data
+ratio (`--gradient-steps 4`, which lifted it to 30.5%) and then another 1.5M
+self-play steps from that checkpoint (→ 59%). This `runs/sac_final.zip` is the
+one shipped to the web game (`RL (trained)` difficulty).
+
+Known weakness: **own goals** (~51/200 eps) are now the dominant loss mode — the
+policy plays aggressively and sometimes scores on itself. A dense
+shoot-backward penalty in `AirHockeyEnv._reward` didn't dent it; reducing own
+goals (and pushing win-rate past 59%) is the next training target.
