@@ -1,7 +1,7 @@
 # Air Hockey Bot (10 Hz, hybrid physics + RL)
 
-**▶ Play in your browser:** `https://OWNER.github.io/REPO/` (after enabling
-GitHub Pages — see below). No install, plays against the bot on your half.
+**▶ Play in your browser:** https://nawat-john.github.io/air-hockey-master/
+No install — plays against the bot on your half.
 
 A 2D air-hockey simulator and a strong bot that **predicts the puck's
 trajectory** (including wall bounces) and learns strategy with reinforcement
@@ -20,10 +20,11 @@ airhockey/
   opponents.py   ScriptedPredictor (baseline), PolicyOpponent (self-play), Random/Still
   render.py      Renderer — pygame view for human play and GIFs
 scripts/
-  play_human.py  play with the mouse vs the bot
-  train_sac.py   SAC training with curriculum + self-play league
-  evaluate.py    win rate and sub-metrics vs a baseline
-  record_gif.py  capture a demo GIF
+  play_human.py    play with the mouse vs the bot
+  train_sac.py     SAC training with curriculum + self-play league
+  evaluate.py      win rate and sub-metrics vs a baseline
+  record_gif.py    capture a demo GIF
+  export_policy.py dump the trained actor to docs/policy.js for the web game
 tests/
   test_physics.py  collision / no-tunnelling / predictor-accuracy checks
 ```
@@ -35,36 +36,55 @@ policy as observation features and also serves as the scripted baseline opponent
 
 ## Setup
 
-Uses the self-contained Python on `D:` (`D:\Code\.venv`). Torch must be the
-**CUDA** build — if pip ever replaces it with the CPU build, restore it:
+Requires **Python 3.10+**. Create a virtual environment and install the deps:
 
-```powershell
-D:\Code\.venv\Scripts\python.exe -m pip install -r requirements.txt
-D:\Code\.venv\Scripts\python.exe -m pip install torch==2.6.0+cu124 torchvision==0.21.0+cu124 --index-url https://download.pytorch.org/whl/cu124
+```bash
+python -m venv .venv
+
+# activate it —
+source .venv/bin/activate        # Linux / macOS
+.venv\Scripts\Activate.ps1       # Windows (PowerShell)
+
+pip install -r requirements.txt
 ```
+
+GPU training needs the **CUDA build of PyTorch**. If pip pulls the CPU build,
+reinstall it (CUDA 12.4 shown — pick the build matching your driver):
+
+```bash
+pip install torch==2.6.0+cu124 torchvision==0.21.0+cu124 \
+  --index-url https://download.pytorch.org/whl/cu124
+```
+
+Verify with `python -c "import torch; print(torch.cuda.is_available())"`.
 
 ## Quick start
 
-```powershell
-# Verify the physics first (plan §10 — always before training)
-D:\Code\.venv\Scripts\python.exe -m pytest tests -q
+With the virtual environment activated:
 
-# Play against the scripted bot with your mouse
-D:\Code\.venv\Scripts\python.exe scripts\play_human.py
+```bash
+# Verify the physics first (always before training)
+python -m pytest tests -q
+
+# Play against the bot with your mouse
+python scripts/play_human.py
 
 # Train through the curriculum (each phase continues from the previous one)
-D:\Code\.venv\Scripts\python.exe scripts\train_sac.py --phase defend   --timesteps 150000
-D:\Code\.venv\Scripts\python.exe scripts\train_sac.py --phase attack   --timesteps 200000 --load runs\defend.zip
-D:\Code\.venv\Scripts\python.exe scripts\train_sac.py --phase full     --timesteps 400000 --load runs\attack.zip
-D:\Code\.venv\Scripts\python.exe scripts\train_sac.py --phase selfplay --timesteps 800000 --load runs\full.zip
+python scripts/train_sac.py --phase defend   --timesteps 150000
+python scripts/train_sac.py --phase attack   --timesteps 200000 --load runs/defend.zip
+python scripts/train_sac.py --phase full     --timesteps 400000 --load runs/attack.zip
+python scripts/train_sac.py --phase selfplay --timesteps 800000 --load runs/full.zip
 
 # Evaluate and record a demo
-D:\Code\.venv\Scripts\python.exe scripts\evaluate.py --model runs\sac_final.zip --episodes 200
-D:\Code\.venv\Scripts\python.exe scripts\record_gif.py --model runs\sac_final.zip --out demo.gif
+python scripts/evaluate.py --model runs/sac_final.zip --episodes 200
+python scripts/record_gif.py --model runs/sac_final.zip --out demo.gif
 
 # Watch training curves
-D:\Code\.venv\Scripts\python.exe -m tensorboard.main --logdir runs\tb
+python -m tensorboard.main --logdir runs/tb
 ```
+
+On headless machines (CI, servers) pygame has no display — prefix commands that
+run the sim with `SDL_VIDEODRIVER=dummy`, e.g. `SDL_VIDEODRIVER=dummy python -m pytest tests -q`.
 
 ## Notes
 
@@ -86,24 +106,21 @@ runs entirely client-side with **no backend**. GitHub Pages can't run PyTorch, s
 the trained **RL policy is shipped as weights, not a runtime**: `export_policy.py`
 dumps the SAC actor (16→[256,256]→2) to `docs/policy.js`, and the **`RL (trained)`**
 difficulty runs that net via a hand-coded MLP forward pass in `game.js`. Re-run
-the export after retraining to update the web policy:
+the export after retraining to refresh the web policy:
 
-```powershell
-D:\Code\.venv\Scripts\python.exe scripts\export_policy.py --model runs\sac_final.zip
+```bash
+python scripts/export_policy.py --model runs/sac_final.zip
 ```
 
-To publish it:
+Test it locally before pushing:
 
-1. Push the repo to GitHub.
-2. Settings → Pages → Build and deployment → **Deploy from a branch**.
-3. Branch = `main`, folder = **`/docs`** → Save.
-4. After ~1 min the game is live at `https://OWNER.github.io/REPO/`.
-
-Test locally first:
-
-```powershell
-D:\Code\.venv\Scripts\python.exe -m http.server -d docs 8000   # then open http://localhost:8000
+```bash
+python -m http.server -d docs 8000   # then open http://localhost:8000
 ```
+
+To publish, push to GitHub then enable Pages: **Settings → Pages → Build and
+deployment → Deploy from a branch**, branch `main`, folder **`/docs`**. The game
+goes live at `https://<owner>.github.io/<repo>/` after ~1 min.
 
 Difficulty `easy/normal/hard` scales the scripted bot's speed, aggression, and
 reaction delay; `RL (trained)` instead runs the trained policy client-side. The
@@ -112,15 +129,17 @@ sim, and the ported actor matches `model.predict` to ~1e-4.
 
 ## Shipping the trained model
 
-- **Model files are gitignored** (`runs/`, `*.zip`, `*.gif`) — keep weights out
-  of git. Trained models are tiny (~3 MB each), so ship them as **Release
-  assets** instead. After training locally:
-  ```powershell
-  gh release create v0.1 runs\sac_final.zip --title "v0.1" --notes "trained agent"
-  # add a model to an existing release:
-  gh release upload v0.1 runs\sac_final.zip
-  ```
-  Download later with `gh release download v0.1`.
+Model weights are gitignored (`runs/`, `*.zip`, `*.gif`) to keep binaries out of
+git history. Trained models are tiny (~3 MB), so they're published as **GitHub
+Release assets**. Grab the latest from the
+[releases page](https://github.com/nawat-john/air-hockey-master/releases), or
+with the GitHub CLI:
+
+```bash
+gh release download v0.1                       # fetch runs/sac_final.zip
+gh release create v0.2 runs/sac_final.zip \    # publish a new one
+  --title "v0.2" --notes "trained agent"
+```
 
 ## Current status
 
